@@ -1,0 +1,53 @@
+﻿transect,tidal_zone,distance_to_source,region,distance_group
+DUX_low_summer,low,23446.4,San Francisco,>18 km
+DUX_low_fall/winter,low,23446.4,San Francisco,>18 km
+DUX_mid_summer,mid,23446.4,San Francisco,>18 km
+DUX_mid_fall/winter,mid,23446.4,San Francisco,>18 km
+DUX_high_summer,high,23446.4,San Francisco,>18 km
+DUX_high_fall/winter,high,23446.4,San Francisco,>18 km
+SR_low_summer,low,13161.8,San Francisco,12- 18 km
+SR_low_fall/winter,low,13161.8,San Francisco,12- 18 km
+SR_mid_summer,mid,13161.8,San Francisco,12- 18 km
+SR_mid_fall/winter,mid,13161.8,San Francisco,12- 18 km
+SR_high_summer,high,13161.8,San Francisco,12- 18 km
+SR_high_fall/winter,high,13161.8,San Francisco,12- 18 km
+MB_low_summer,low,10294.1,San Francisco,6-12 km
+MB_low_fall/winter,low,10294.1,San Francisco,6-12 km
+MB_mid_summer,mid,10294.1,San Francisco,6-12 km
+MB_mid_fall/winter,mid,10294.1,San Francisco,6-12 km
+MB_high_summer,high,10294.1,San Francisco,6-12 km
+MB_high_fall/winter,high,10294.1,San Francisco,6-12 km
+DV_low_summer,low,22518.9,Santa Cruz,>18 km
+DV_low_fall/winter,low,22518.9,Santa Cruz,>18 km
+DV_mid_summer,mid,22518.9,Santa Cruz,>18 km
+DV_mid_fall/winter,mid,22518.9,Santa Cruz,>18 km
+DV_high_summer,high,22518.9,Santa Cruz,>18 km
+DV_high_fall/winter,high,22518.9,Santa Cruz,>18 km
+NB_mid_summer,mid,5995.6,Santa Cruz,2-6 km
+NB_mid_fall/winter,mid,5995.6,Santa Cruz,2-6 km
+NB_high_summer,high,5995.6,Santa Cruz,2-6 km
+NB_high_fall/winter,high,5995.6,Santa Cruz,2-6 km
+RV_low_summer,low,2993.3,Santa Cruz,2-6 km
+RV_mid_summer,mid,2993.3,Santa Cruz,2-6 km
+RV_high_fall/winter,high,2993.3,Santa Cruz,2-6 km
+BC_low_summer,low,597.81,Monterey,0-2 km
+BC_low_fall/winter,low,597.81,Monterey,0-2 km
+BC_mid_summer,mid,597.81,Monterey,0-2 km
+BC_mid_fall/winter,mid,597.81,Monterey,0-2 km
+BC_high_summer,high,597.81,Monterey,0-2 km
+BC_high_fall/winter,high,597.81,Monterey,0-2 km
+McB_low_summer,low,1292.2,Monterey,0-2 km
+McB_low_fall/winter,low,1292.2,Monterey,0-2 km
+McB_mid_summer,mid,1292.2,Monterey,0-2 km
+McB_mid_fall/winter,mid,1292.2,Monterey,0-2 km
+McB_high_summer,high,1292.2,Monterey,0-2 km
+McB_high_fall/winter,high,1292.2,Monterey,0-2 km
+LP_low_summer,low,3000.21,Monterey,2-6 km
+LP_low_fall/winter,low,3000.21,Monterey,2-6 km
+LP_mid_summer,mid,3000.21,Monterey,2-6 km
+LP_mid_fall/winter,mid,3000.21,Monterey,2-6 km
+LP_high_summer,high,3000.21,Monterey,2-6 km
+LP_high_fall/winter,high,3000.21,Monterey,2-6 km
+PP_low_summer,low,5408.01,Monterey,2-6 km
+PP_mid_summer,mid,5408.01,Monterey,2-6 km
+PP_high_summer,high,5408.01,Monterey,2-6 km

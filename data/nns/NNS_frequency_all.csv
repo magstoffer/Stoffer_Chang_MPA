@@ -1,0 +1,51 @@
+﻿transect_tidal,unique_quadrat_count,site,region,distance_to_source_m,protection_level,season,tidal_zone,total_quadrats,frequency_occur
+BC_low_fall/winter,19,BC,Monterey,597.81,highly,fall/winter,low,120,0.158333333
+BC_low_summer,22,BC,Monterey,597.81,highly,summer,low,80,0.275
+BC_mid_fall/winter,31,BC,Monterey,597.81,highly,fall/winter,mid,120,0.258333333
+BC_mid_summer,3,BC,Monterey,597.81,highly,summer,mid,97,0.030927835
+BC_high_summer,0,BC,Monterey,597.81,highly,summer,high,78,0
+BC_high_fall/winter,0,BC,Monterey,597.81,highly,fall/winter,high,120,0
+LP_low_summer,1,LP,Monterey,3000.21,fully,summer,low,89,0.011235955
+LP_low_fall/winter,10,LP,Monterey,3000.21,fully,fall/winter,low,120,0.083333333
+LP_mid_summer,2,LP,Monterey,3000.21,fully,summer,mid,94,0.021276596
+LP_mid_fall/winter,1,LP,Monterey,3000.21,fully,fall/winter,mid,120,0.008333333
+LP_high_summer,0,LP,Monterey,3000.21,fully,summer,high,120,0
+LP_high_fall/winter,0,LP,Monterey,3000.21,fully,fall/winter,high,120,0
+McB_low_fall/winter,23,McB,Monterey,1292.2,highly,fall/winter,low,100,0.23
+McB_low_summer,3,McB,Monterey,1292.2,highly,summer,low,116,0.025862069
+McB_mid_summer,0,McB,Monterey,1292.2,highly,summer,mid,85,0
+McB_mid_fall/winter,5,McB,Monterey,1292.2,highly,fall/winter,mid,105,0.047619048
+McB_high_summer,0,McB,Monterey,1292.2,highly,fall/winter,high,67,0
+McB_high_fall/winter,0,McB,Monterey,1292.2,highly,fall/winter,high,106,0
+PP_low_summer,0,PP,Monterey,5408.01,highly,summer,low,116,0
+PP_mid_summer,0,PP,Monterey,5408.01,highly,summer,mid,104,0
+PP_high_summer,0,PP,Monterey,5408.01,highly,summer,high,114,0
+MB_low_fall/winter,1,MB,San Francisco,10294.1,limited,fall/winter,low,114,0.00877193
+MB_low_summer,3,MB,San Francisco,10294.1,limited,summer,low,120,0.025
+MB_mid_fall/winter,7,MB,San Francisco,10294.1,limited,fall/winter,mid,110,0.063636364
+MB_mid_summer,1,MB,San Francisco,10294.1,limited,summer,mid,117,0.008547009
+MB_high_summer,0,MB,San Francisco,10294.1,limited,summer,high,120,0
+MB_high_fall/winter,0,MB,San Francisco,10294.1,limited,fall/winter,high,107,0
+SR_high_summer,1,SR,San Francisco,13161.8,limited,summer,high,120,0.008333333
+SR_low_fall/winter,43,SR,San Francisco,13161.8,limited,fall/winter,low,72,0.597222222
+SR_low_summer,32,SR,San Francisco,13161.8,limited,summer,low,108,0.296296296
+SR_mid_summer,6,SR,San Francisco,13161.8,limited,summer,mid,120,0.05
+DUX_low_summer,0,DUX,San Francisco,23446.4,highly,summer,low,97,0
+DUX_low_fall/winter,0,DUX,San Francisco,23446.4,highly,fall/winter,low,120,0
+DUX_mid_summer,0,DUX,San Francisco,23446.4,highly,summer,mid,120,0
+DUX_mid_fall/winter,0,DUX,San Francisco,23446.4,highly,fall/winter,mid,120,0
+DUX_high_fall/winter,0,DUX,San Francisco,23446.4,highly,summer,high,120,0
+DUX_high_fall/winter,0,DUX,San Francisco,23446.4,highly,fall/winter,high,120,0
+RV_low_summer,2,RV,Santa Cruz,2993.3,limited,summer,low,105,0.019047619
+RV_mid_summer,19,RV,Santa Cruz,2993.3,limited,summer,mid,117,0.162393162
+RV_high_summer,21,RV,Santa Cruz,2993.3,limited,summer,high,120,0.175
+NB_mid_summer,0,NB,Santa Cruz,5995.6,fully,summer,mid,120,0
+NB_mid_fall/winter,7,NB,Santa Cruz,5995.6,fully,fall/winter,mid,120,0.058333333
+NB_high_summer,6,NB,Santa Cruz,5995.6,fully,summer,high,116,0.051724138
+NB_high_fall/winter,10,NB,Santa Cruz,5995.6,fully,fall/winter,high,120,0.083333333
+DV_low_summer,0,DV,Santa Cruz,22518.9,limited,summer,low,105,0
+DV_low_fall/winter,0,DV,Santa Cruz,22518.9,limited,fall/winter,low,120,0
+DV_mid_summer,0,DV,Santa Cruz,22518.9,limited,summer,mid,120,0
+DV_mid_fall/winter,0,DV,Santa Cruz,22518.9,limited,fall/winter,mid,120,0
+DV_high_summer,0,DV,Santa Cruz,22518.9,limited,summer,high,120,0
+DV_high_fall/winter,0,DV,Santa Cruz,22518.9,limited,fall/winter,high,120,0

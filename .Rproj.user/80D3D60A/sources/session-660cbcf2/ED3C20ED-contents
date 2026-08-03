@@ -1,0 +1,218 @@
+---
+title: "site_selection"
+format: html
+---
+
+### **Loading Required Packages**
+
+```{r}
+library(tidyverse)
+library(sf)
+library(readr)
+library(spsurvey)
+library(terra)
+```
+
+### Loading Data
+
+#### *Legacy Sites*
+
+Loading legacy site data in as a csv, converting to sf, and assigning WGS 84 GCS since this is the GCS data likely collected in
+
+```{r}
+legacy.sites<-read_csv("data/spatial/legacysites.csv")
+legacy.sites.sf <- st_as_sf(legacy.sites, coords=c('lon_WGS84', 'lat_WGS84'))
+
+st_crs(legacy.sites.sf) <- 4326
+
+legacyCRS<-crs(legacy.sites.sf)
+```
+
+#### ***Basins***
+
+These basins were modifed in ArcGIS pro to expand the survey area to incldue parts of the Lake Direct subbasin
+
+```{r}
+subs<- st_read("data/spatial/modified_subbasins_grts")
+subsCRS<-crs(subs)
+```
+
+# 
+
+#### *Hydrology*
+
+Hydrology data were derived from 1:24,000 NHD; clipped to study area (basins), and a variable was added to the attribute table to include above or below first barrier from Lake Champlain. Spatial analyses done in ArcGIS Pro.
+
+```{r}
+hydro.grts<-st_read("data/spatial/hydro_grts")
+hydroCRS<-crs(hydro.grts)
+```
+
+#### ***Joining Hydrological and Basin Data***
+
+```{r}
+#Matching CRS 
+hydro.grts<- st_transform(hydro.grts, subsCRS)
+hydroCRS.2<-crs(hydro.grts)
+
+#Joining Datasets
+hydro.subbasin <- st_intersection(hydro.grts, subs)
+
+#Renaming NAME to basin
+hydro.subbasin <- hydro.subbasin %>% rename(basin=NAME) 
+
+# Making basin name consistent with legacy.sites.sf
+hydro.subbasin <-hydro.subbasin %>% 
+mutate(basin = recode(basin, "Missisquoi Basin" = "missisquoi", "Winooski Basin" = "winooski","Ausable Basin/Salmon" = "ausable","Boquet"="south.boquet", "Otter/Lewis Basin" = "otter.lewis", "Chazy Basin" = "chazy", "South Basin" = "south.boquet", "Poultney-Mettawee"= "poultney.mettawee", "Lamoille Basin" = "lamoille", "Saranac"= "saranac" ))
+
+```
+
+### **Running GRTS**
+
+#### ***Data Preparation***
+
+```{r}
+# Matching CRS
+legacy.sites.sf<- st_transform(legacy.sites.sf, hydroCRS.2)
+
+# Creating basinBarrier variable
+legacy.sites.sf$basinBarrier <- with(legacy.sites.sf, paste(basin, barrier, sep="."))
+
+hydro.subbasin$basinBarrier <- with(hydro.subbasin, paste(basin, barrier, sep="."))
+```
+
+#### ***Defining Stratification***
+
+```{r}
+strata_n <- c(missisquoi.above=4,
+              missisquoi.below=5,
+              poultney.mettawee.above=4,
+              poultney.mettawee.below=5,
+              otter.lewis.above=5,
+              otter.lewis.below=5,
+              ausable.above=4,
+              ausable.below=5, 
+              lamoille.above=5,
+              lamoille.below=5,
+              winooski.above=5,
+              winooski.below=5,
+              chazy.above=4,
+              chazy.below=5,
+              south.boquet.above=4,
+              south.boquet.below=5,
+              saranac.above=2,
+              saranac.below=3
+              )
+```
+
+#### ***Setting Reproducible Seed***
+
+```{r}
+set.seed(123)
+```
+
+#### *Running the GRTS 1.0*
+
+No aux_var for stream length
+
+```{r}
+sites<-grts(hydro.subbasin,
+                    n_base= strata_n,
+                    stratum_var= "basinBarrier",
+                    legacy_sites= legacy.sites.sf,
+                    legacy_stratum_var = "basinBarrier",
+                    n_over=4,
+                    mindis = 1000)
+
+plot(sites)
+
+```
+
+#### *Exporting Sites*
+
+```{r}
+# Combining into one df
+selected.sites2<-sp_rbind(sites)
+
+# Cleaning
+selected.sites2<-selected.sites2 %>% 
+  select(siteID, siteuse,lat_WGS84, lon_WGS84, basin, species.detected, barrier, geometry)
+
+# Exporting
+write_csv(selected.sites2,"sites/selected.sites2.csv", col_names = TRUE)
+```
+
+#### *Running the GRTS 2.0*
+
+Aux var for stream length –\> this does not look as good
+
+```{r}
+legacy.with.streamorder.indeces <- st_nearest_feature(legacy.sites.sf, hydro.subbasin)
+legacy.with.streamorder <- cbind(legacy.sites.sf, st_drop_geometry(hydro.subbasin)[legacy.with.streamorder.indeces, ])
+
+legacy.with.streamorder<-legacy.with.streamorder %>% 
+  select(basin,species.detected,barrier,STRAHLER, geometry)
+
+hydro.subbasin <- st_cast(st_cast(hydro.subbasin, 'MULTILINESTRING'), 'LINESTRING')
+
+hydro.subbasin$len <- as.numeric(st_length(hydro.subbasin))
+ 
+totlen <- hydro.subbasin %>% group_by(basin, STRAHLER) %>%
+  summarise(totlen = sum(len)) %>% st_drop_geometry()
+ 
+hydro.subbasin <- left_join(hydro.subbasin, totlen)
+ 
+
+legacy.with.streamorder <- left_join(legacy.with.streamorder, totlen)
+legacy.with.streamorder <- legacy.with.streamorder %>% 
+  mutate(totlen = replace_na(totlen, 0))
+
+legacy.with.streamorder$basinBarrier <- with(legacy.with.streamorder, paste(basin, barrier, sep="."))
+  
+sites.2<- grts(hydro.subbasin, n_base = strata_n, n_over=3, stratum_var= "basinBarrier",legacy_sites = legacy.with.streamorder, legacy_stratum_var = "basinBarrier",aux_var = "totlen", legacy_aux_var="totlen")
+
+plot(sites.2, hydro.subbasin, key.width = lcm(3)) 
+```
+
+```{r}
+sites2<-grts(hydro.subbasin,
+                    n_base= strata_n,
+                    stratum_var= "basinBarrier",
+                    aux_var= "Shape_Leng",
+                    legacy_sites= legacy.sites.sf,
+                    legacy_stratum_var = "basinBarrier",
+                    n_over=4,
+                    mindis = 1000)
+
+plot(sites2)
+```
+
+### Exporting Sites
+
+```{r}
+
+```
+
+### **Mapping Sites**
+
+GRTS 1.0
+
+```{r}
+subbasins <- st_read("data/spatial/LCB_2013_subbasins",
+                    layer = "LCB_2013_subbasins")
+
+subbasinCRS<-crs(subbasins)
+```
+
+```{r}
+ggplot()+
+    geom_sf(data=subbasins, alpha= 0.5, aes(fill=NAME)) +
+  scale_fill_brewer(palette="Spectral")+
+geom_sf(data=hydro.grts,alpha=0.9, color="#053373")+
+   geom_sf(data=sites$sites_legacy,size=2.75, color="#F57D27")+
+   geom_sf(data=sites$sites_base,size=2.75, color="#DE26B8")+
+   geom_sf(data=sites$sites_over,size=2.75, color="#337305")+
+ theme_void()
+```
+
+*yfhfhhf*

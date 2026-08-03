@@ -1,0 +1,291 @@
+## Loading Packages
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(readxl)
+library(writexl)
+library(cowplot)
+
+
+
+# REMEMBER: before loading data set working directory to source folder 
+
+# ===================================================================
+# Loading and Cleaning up Taxa and Transect Data
+# ===================================================================
+
+# Loading target taxa data
+summer<-read_xlsx("./data/thesis_cleaned.xlsx", sheet= "summer")
+fall_winter<-read_xlsx("./data/thesis_cleaned.xlsx", sheet= "fall_winter")
+
+taxa<- rbind(summer, fall_winter) # combining sample periods into one dataframe
+ 
+taxa<-taxa %>% 
+ select(-collected, -sample_number) #removing extraneous columns: collected, sample_number
+
+# Loading transect data
+summer_transects<-read_xlsx("./data/transects.xlsx", sheet= "transect_summer")
+fall_winter_transects<-read_xlsx("./data/transects.xlsx", sheet= "transect_fall_winter")
+ 
+transects<- rbind(summer_transects,fall_winter_transects) #combining transect data into one data frame
+
+transects<-transects %>% 
+  select(-start_time, -end_time, -latitude_start, -longitude_start,-latitude_end, -longitude_end) # removing extraneous columns: 
+# start_time, end_time, latitude_start, longitude_start, latitude_end, longitude_end, notes
+
+# Loading in the data for quadrats
+tidal_quadrats<-read_xlsx("./data/transects.xlsx", sheet= "tidal_elevation_quadrats")
+
+# ===================================================================
+# Calculating Frequency of Occurrence at the Tidal Elevation Level
+# ===================================================================
+taxa_transecttidal_counts<-taxa %>% 
+  unite(transect_tidal, site_code, tidal_zone, season, sep="_")
+
+taxa_transecttidal_counts<-taxa_transecttidal_counts %>% 
+  count(transect_tidal, taxa)
+
+taxa_transecttidal_frequency<-left_join(taxa_transecttidal_counts, tidal_quadrats, by= "transect_tidal")
+
+taxa_transecttidal_frequency <-taxa_transecttidal_frequency %>% 
+  mutate(frequency_occur=n/total_quadrats)
+
+# ===================================================================
+# Calculating Mean Frequency of Occurrence at the Tidal zone Level
+# ===================================================================
+mean_frequency<-taxa_transecttidal_frequency %>%
+  group_by(site_code,tidal_zone, taxa) %>%
+  summarize(
+    mean_value = mean(frequency_occur), 
+    sd_value = sd(frequency_occur),    
+    n = n(),                                       
+    se_value = sd_value / sqrt(n)                  
+  )
+# ===================================================================
+# Calculating Aggregated NNS Frequency of Occurrence
+# ===================================================================
+# First creating a variable that combines things by tidal zone in season rather than transect
+monterey<-taxa %>% 
+  filter(region=="monterey")
+
+monterey<-monterey %>% 
+unite(transect_tidal,site_code,tidal_zone,season,sep="_")
+
+# This gives the number of quadrats in a tidal zone where a NNS was found
+monterey_unique_quadrat_count<-monterey %>% 
+  group_by(transect_tidal) %>% 
+  summarise(unique_quadrat_count=n_distinct(quadrat_position)) 
+
+#Joining the Data Frames
+monterey_frequency<-left_join(monterey_unique_quadrat_count, tidal_quadrats, by= "transect_tidal")
+
+#Calculating Aggregated NNS Frequency of Occurrence
+NNS_frequency_mont<-monterey_frequency %>% 
+  mutate(frequency_occur=unique_quadrat_count/total_quadrats)
+write_xlsx(NNS_frequency_mont, "NNS_frequency_mont.xlsx")
+
+# Calculating Aggregated NNS for SF
+sf<-taxa %>% 
+  filter(region=="sf")
+
+sf<-sf %>% 
+  unite(transect_tidal,site_code,tidal_zone,season,sep="_")
+
+sf_unique_quadrat_count<-sf %>% 
+  group_by(transect_tidal) %>% 
+  summarise(unique_quadrat_count=n_distinct(quadrat_position)) 
+
+sf_frequency<-left_join(sf_unique_quadrat_count, tidal_quadrats, by= "transect_tidal")
+
+NNS_frequency_sf<-sf_frequency %>% 
+  mutate(frequency_occur=unique_quadrat_count/total_quadrats)
+
+write_xlsx(NNS_frequency_sf, "NNS_frequency_sf.xlsx")
+
+# Calculating Aggregated NNS for Santa Cruz
+santacruz<-taxa %>% 
+  filter(region=="santa_cruz")
+
+santacruz<-santacruz %>% 
+  unite(transect_tidal,site_code,tidal_zone,season,sep="_")
+
+santacruz_unique_quadrat_count<-santacruz %>% 
+  group_by(transect_tidal) %>% 
+  summarise(unique_quadrat_count=n_distinct(quadrat_position)) 
+
+santacruz_frequency<-left_join(santacruz_unique_quadrat_count, tidal_quadrats, by= "transect_tidal")
+
+NNS_frequency_santacruz<-santacruz_frequency %>% 
+  mutate(frequency_occur=unique_quadrat_count/total_quadrats)
+
+write_xlsx(NNS_frequency_santacruz, "NNS_frequency_santacruz.xlsx")
+
+# ===================================================================
+# Plots for Taxa Frequency of Occurrence 
+# ===================================================================
+watersipora_freq_plot<-ggplot(subset(taxa_transecttidal_frequency, taxa %in% "watersipora"), aes(x = site_code, y = frequency_occur*100, color=protection_level, shape=tidal_zone))+
+  scale_shape_manual(labels= c("low" = "Low Intertidal", "mid" = "Mid Intertidal", "high" ="High Intertidal"), values=c("low"= 19, "mid"=17, "high"=15), breaks=c("low", "mid", "high"))+
+  scale_color_manual(labels=c("limited"= "Minimally Protected" , "SMCA" = "Highly Protected" , "SMR"= "Fully Protected"), values=c("#8c8e8f","#479dea","#ea6347"), name="Level of Protection")+
+  geom_jitter(size=4,width = 0.2)+
+  stat_summary(fun=mean, geom="point", shape=4, size=8, colour="black", position= position_dodge(0.75))+
+  labs(x="Site", y=expression(paste("% of Quadrats with ", italic("Watersipora subatra"))))+
+  scale_x_discrete(limits=c('DUX','SR','MB','DV','NB','RV','BC','McB','LP','PP'))+
+  labs(color= "Level of Protection", shape="Tidal Zone")+
+  theme(axis.title.y = element_text(size=14), axis.title.x=element_text(size=14))+
+  theme_minimal()
+watersipora_freq_plot
+
+bugula_freq_plot<-ggplot(subset(taxa_transecttidal_frequency, taxa %in% "bugula_neritina"), aes(x = site_code, y = frequency_occur*100, color=protection_level, shape=tidal_zone))+
+  scale_shape_manual(labels= c("low" = "Low Intertidal", "mid" = "Mid Intertidal", "high" ="High Intertidal"), values=c("low"= 19, "mid"=17, "high"=15), breaks=c("low", "mid", "high"))+
+  scale_color_manual(labels=c("limited"= "Minimally Protected" , "SMCA" = "Highly Protected" , "SMR"= "Fully Protected"), values=c("#8c8e8f","#479dea","#ea6347"), name="Level of Protection")+
+  geom_point(size=3)+
+  stat_summary(fun=mean, geom="point", shape=4, size=8, colour="black", position= position_dodge(0.75))+
+  labs(x="Site", y=expression(paste("% of Quadrats with ", italic("Bugula neritina"))))+
+  scale_x_discrete(limits=c('DUX','SR','MB','DV','NB','RV','BC','McB','LP','PP'))+
+  labs(color= "Protection Level", shape="Tidal Zone")+
+  theme(axis.title.y = element_text(size=14), axis.title.x=element_text(size=14))+
+  theme_minimal()
+bugula_freq_plot
+
+# ===================================================================
+# Percent Cover Calculations
+# ===================================================================
+#Changing <1 cover to 0.5
+taxa$percent_cover[taxa$percent_cover=="<1"] <- "0.5"
+
+#Changing percent cover to numeric from character 
+taxa$percent_cover<-as.numeric(taxa$percent_cover)
+
+# Calculating Maximum Percent Cover for Taxa at Each Site by Season
+max_percent_cover<-taxa %>% 
+  group_by(site_code, season, taxa) %>% 
+  summarise(max_percent_cover= max(percent_cover, na.rm=TRUE)) 
+
+# Calculating Mean Percent Cover for Each Taxa for Quadrats the Site Level
+avg_percent_cover_site<-taxa %>% 
+  group_by(site_code, taxa) %>% 
+  summarise(avg_percent_cover= mean(percent_cover))
+
+# Calculating Mean Percent Cover for Each Taxa Quadrats in Each Tidal zone Level by Season
+avg_percent_cover_season<-taxa %>% 
+  group_by(site_code, season, taxa, tidal_zone) %>% 
+  summarise(avg_percent_cover= mean(percent_cover))
+
+# Calculating Mean Percent Cover for Each Taxa Quadrats in Each Tidal zone Aggregated by Season 
+avg_percent_cover_grouped<-taxa %>% 
+  group_by(site_code,taxa, tidal_zone) %>% 
+  summarise(avg_percent_cover= mean(percent_cover))
+
+# Calculating Transect Level Percent Cover of Taxa 
+percent_cover_transect<-taxa %>% 
+  mutate(total_area= ((percent_cover/100)*0.25)) %>% 
+  group_by(site_code,taxa, tidal_zone,season) %>% 
+  summarize(sum_area=sum(total_area)) 
+zone.areas<-tidal_quadrats %>% 
+  select(transect_tidal, total_area)
+percent_cover_transect <-percent_cover_transect %>% 
+  unite(transect_tidal,site_code,tidal_zone,season,sep="_")
+percent_cover_transects_calc<-left_join(percent_cover_transect, zone.areas, by="transect_tidal") %>% 
+ mutate(percent_cover_tidal_zone= (sum_area/total_area))
+
+# Calculating Site Level Cover of Taxa
+
+# ===================================================================
+# Percent Cover Visualizations
+# ===================================================================
+## dotplots with mean, each point represents percent cover in a surveyed quadrat where a target taxa was positively identified 
+watersipora_cover<-ggplot(subset(taxa, taxa %in% "watersipora"), aes(x = site_code, y = percent_cover, color=protection_level, shape=tidal_zone))+
+  scale_color_manual(values=c("#8c8e8f","#479dea","#ea6347"), name="Protection Level")+
+  scale_shape_manual(values=c("low"= 19, "mid"=17, "high"=15))+
+  geom_jitter(size=3,width = 0.2)+
+  stat_summary(fun=mean, geom="point", shape=4, size=8, colour="black", position= position_dodge(0.75))+
+  xlab("Site")+
+  ylab("Percent Cover of Quadrat")+
+  scale_x_discrete(limits=c('DUX','SR','MB','DV','NB','RV','BC','McB','LP','PP'))+
+  labs(color= "Protection Level", shape="Tidal Zone")+
+  theme_minimal()
+watersipora_cover
+
+bugula_cover<-ggplot(subset(taxa, taxa %in% "bugula_neritina"), aes(x = site_code, y = percent_cover, color=protection_level, shape=tidal_zone))+
+  scale_color_manual(values=c("#8c8e8f","#479dea","#ea6347"), name="Protection Level")+
+  scale_shape_manual(values=c("low"= 19, "mid"=17, "high"=15))+
+  geom_jitter(size=3,width = 0.2)+
+  stat_summary(fun=mean, geom="point", shape=4, size=8, colour="black", position= position_dodge(0.75))+
+  xlab("Site")+
+  ylab("Percent Cover of Quadrat")+
+  scale_x_discrete(limits=c('DUX','SR','MB','DV','NB','RV','BC','McB','LP','PP'))+
+  labs(color= "Protection Level", shape="Tidal Zone")+
+  theme_minimal()
+bugula_cover
+
+# ===================================================================
+# Habitat info 
+# ===================================================================
+# Tidal Counts Calculation and Figures for Appendix
+
+tidal_counts<-taxa %>% 
+  group_by(taxa,site_code,tidal_zone) %>% 
+  summarise(number=n())
+tidal_counts
+
+#higher=black, low= orgage, blue=mid
+ggplot(subset(tidal_counts, taxa %in% "watersipora"), aes (fill= tidal_zone,x=site_code,y=number ))+
+  geom_bar(position="stack", stat="identity")+
+  scale_fill_manual(values=c("#000000", "#E69F00","#56B4E9"), name="Tidal Zone")+
+  scale_x_discrete(limits=c('SR','MB','BC','McB','LP'))+
+  xlab("Site")+
+  ylab("Number of Quadrats Detected")+
+  theme_minimal()
+
+ggplot(subset(tidal_counts, taxa %in% "bugula_neritina"), aes (fill= tidal_zone,x=site_code,y=number ))+
+  geom_bar(position="stack", stat="identity")+
+  scale_fill_manual(values=c("#E69F00","#56B4E9"), name="Tidal Zone")+
+  scale_x_discrete(limits=c('NB','RV', 'BC','McB','LP'))+
+  xlab("Site")+
+  ylab("Number of Quadrats  Detected")+
+  theme_minimal()
+
+# Substrate Count Calculation and Figures for Appendix
+substrate_counts<-taxa %>% 
+  group_by(taxa,site_code,substrate) %>% 
+  summarise(number=n())
+substrate_counts
+
+ggplot(subset(substrate_counts, taxa %in% "watersipora"), aes (fill= substrate,x=site_code,y=number ))+
+  geom_bar(position="stack", stat="identity")+
+  scale_fill_manual(values=c("#E69F00","#56B4E9"), name="Growth Substrate")+
+  scale_x_discrete(limits=c('SR','MB','BC','McB','LP'))+
+  xlab("Site")+
+  ylab("Number of Quadrats Detected")+
+  theme_minimal()
+
+ggplot(subset(substrate_counts, taxa %in% "bugula_neritina"), aes (fill= substrate,x=site_code,y=number ))+
+  geom_bar(position="stack", stat="identity")+
+  scale_fill_manual(values=c("#E69F00","#56B4E9"), name="Growth Substrate")+
+  scale_x_discrete(limits=c('NB','RV', 'BC','McB','LP'))+
+  xlab("Site")+
+  ylab("Number of Quadrats Detected")+
+  theme_minimal()
+
+# Orientation of Growth Calculation and Figures for Appendix
+# black= horizintal, organge=overhang, blue=vertical
+orientation_counts<-taxa %>% 
+  group_by(taxa,site_code,,orientation) %>% 
+  summarise(number=n())
+orientation_counts
+
+ggplot(subset(orientation_counts, taxa %in% "watersipora"), aes (fill= orientation,x=site_code,y=number ))+
+  geom_bar(position="stack", stat="identity")+
+  scale_fill_manual(values=c("#000000","#E69F00","#56B4E9"), name="Orientation of Growth")+
+  scale_x_discrete(limits=c('SR','MB','BC','McB','LP'))+
+  xlab("Site")+
+  ylab("Number of Quadrats Detected")+
+  theme_minimal()
+
+ggplot(subset(orientation_counts, taxa %in% "bugula_neritina"), aes (fill= orientation,x=site_code,y=number ))+
+  geom_bar(position="stack", stat="identity")+
+  scale_fill_manual(values=c("#000000","#E69F00","#56B4E9"), name="Orientation of Growth")+
+  scale_x_discrete(limits=c('NB','RV','BC','McB','LP'))+
+  xlab("Site")+
+  ylab("Number of Quadrats Detected")+
+  theme_minimal()

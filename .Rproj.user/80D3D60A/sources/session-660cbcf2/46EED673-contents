@@ -1,0 +1,100 @@
+# Study Area Map Stoffer & Chang
+# Author: M. Stoffer, A. Chang
+# Date: 30 July 2026
+
+
+# Loading Required Packages 
+if (!requireNamespace("pacman", quietly = TRUE)) {
+  install.packages("pacman")}
+
+pacman::p_load(tidyverse,sf, ggspatial, ggrepel, cowplot)
+
+# Loading Spatial Data and Getting Projection
+ca<-st_read("data/spatial/ca_state")
+caCRS<-st_crs(ca)
+
+ca_mpa<-st_read("data/spatial/ca_mpas")
+mpaCRS<-st_crs(ca_mpa)
+
+ca_coast<-st_read("data/spatial/ca_esri_coastline")
+coastCRS<-st_crs(ca_coast)
+
+# Setting Projection to Caliornia Albers Equal Area 
+ca_projected<-st_transform(ca, crs=4326)
+ca_mpa_projected<-st_transform(ca_mpa, crs=3310)
+
+
+# Loading Site Coordinates 
+sites<-read_csv("data/spatial/sites.csv")
+sites_sf <- st_as_sf(sites, coords=c('longitude', 'latitude'))
+st_crs(sites_sf) <- 4326
+sites_sf<-st_transform(sites_sf, crs=4326)
+
+
+# Locator Map for California
+ggplot()+
+  geom_sf(data=ca_projected, fill=NA, color="black", linewidth=1) +
+  theme_void()
+  
+# Map of Entire Study Area
+map_theme <- theme_cowplot() +
+  theme(axis.text.x = element_text(color = "black", size = 10),
+        axis.text.y = element_text(color = "black", size = 10),
+        axis.title.x = element_text(size = 9),
+        axis.title.y = element_text(size = 9),
+        legend.text = element_text(size = 9),
+        legend.title = element_text(size = 9),
+        panel.border= element_blank(),	
+        axis.line.x = element_line(color = "black", size = 0.5),
+        axis.line.y = element_line(color = "black", size = 0.5))
+
+sites[7:10,2] <- ""
+
+ggplot()+
+  geom_sf(data=ca_coast,fill="#BEBEBE", color = "#BEBEBE")+
+  geom_sf(data= sites_sf, aes(color=protection_level), shape = 19, size = 3)+
+  scale_color_manual(labels=c("limited"= "Minimally Protected" , "highly" = "Highly Protected" , "fully"= "Fully Protected"), values=c("limited"= "black","highly"="#479dea","fully"="#ea6347"), name="Level of Protection")+
+  coord_sf(xlim = c(-122.8, -121.6), ylim = c(36.5, 38.0))+
+  geom_text_repel(data = sites, aes(x =longitude, y = latitude, label=site_code), size = 4)+
+  geom_rect(aes(xmin=-121.99, xmax= -121.86, ymin = 36.59, ymax=36.66), color="black", inherit.aes=FALSE, fill=NA)+
+  ylab("Latitude") +
+  xlab("Longitude") +
+  map_theme +
+  annotate("text", x = -122.7, y = 37.4, label = "italic('Pacific')", parse=TRUE, size = 4) +
+  annotate("text", x = -122.7, y = 37.325, label = "italic('Ocean')", parse=TRUE, size = 4) +
+  annotate("text", x = -122.0, y = 37.8, label = "San Francisco Bay", size = 3) +
+  annotate("text", x = -122.0, y = 37.06, label = "Santa Cruz", size = 3) +
+  annotate("text", x = -121.7, y = 36.6, label = "Monterey", size = 3)+
+  annotation_scale(location="bl")+
+  annotation_north_arrow(location="bl", width=unit(1.0, "cm"), height=unit(1.5, "cm"), pad_y=unit(0.75, "cm"))+
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 1), axis.text.x = element_text(angle = 45, hjust = 1))+
+  theme(legend.position=c(1.1, 0.9))
+  
+
+# Map of Monterey
+monterey_sites_sf<-sites_sf |> 
+  filter(region == "Monterey")
+
+monterey_sites<-read_csv("data/spatial/sites.csv") |> 
+  filter(region=="Monterey")
+  
+ggplot()+
+  geom_sf(data=ca_coast,fill="#BEBEBE", color = "#BEBEBE")+
+  geom_sf(data= monterey_sites_sf, aes(color=protection_level), shape = 19, size = 3)+
+  scale_color_manual(labels=c("limited"= "Minimally Protected" , "highly" = "Highly Protected" , "fully"= "Fully Protected"), values=c("limited"= "black","highly"="#479dea","fully"="#ea6347"), name="Level of Protection")+
+  geom_text_repel(data = monterey_sites, aes(x =longitude, y = latitude, label=site_code), size = 4)+
+  coord_sf(xlim = c(-121.95, -121.87), ylim = c(36.60, 36.65))+
+  ylab("Latitude") +
+  xlab("Longitude") +
+  map_theme+
+  annotation_scale(location="bl")+
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 1), axis.text.x = element_text(angle = 45, hjust = 1))+
+theme(legend.position = "none")
+  
+
+  
+
+
+  
+  
+  
